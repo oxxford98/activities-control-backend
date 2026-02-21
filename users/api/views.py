@@ -33,7 +33,7 @@ class UserApiViewSet(ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         serializer = LoginSerializer(
-            User.objects.filter(deleted_at=None), many=True
+            User.objects.all(), many=True
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
