@@ -1,0 +1,12 @@
+version: '3.9'
+
+services:
+  web:
+    build: .
+    command: gunicorn api.wsgi:application --bind 0.0.0.0:9000
+    volumes:
+      - .:/app
+    ports:
+      - "9000:9000"
+    env_file:
+      - .env
