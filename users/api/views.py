@@ -6,6 +6,7 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from users.api.serializers import LoginSerializer, RegisterSerializer
 from datetime import datetime
+from rest_framework.decorators import api_view, permission_classes
 
 
 class UserApiViewSet(ModelViewSet):
@@ -62,3 +63,10 @@ class UserApiViewSet(ModelViewSet):
         }
         return Response(data=data)
 
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_info_user(request):
+    user = request.user
+    login_user = LoginSerializer(user)
+    return Response(login_user.data, status=status.HTTP_200_OK)
