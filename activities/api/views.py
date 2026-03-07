@@ -1,3 +1,6 @@
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework.exceptions import ValidationError
+
 from activities.api.serializer import ActivitySerializer
 from activities.models import Activity
 from rest_framework.viewsets import ModelViewSet
@@ -7,6 +10,8 @@ from rest_framework.response import Response
 from django.utils import timezone
 from subactivities.models import SubActivity
 from subactivities.api.serializer import SubActivitySerializer
+from activities.api.swagger import sub_activities_today_decorator
+from django.db import transaction
 
 
 class ActivityApiViewSet(ModelViewSet):
@@ -14,9 +19,23 @@ class ActivityApiViewSet(ModelViewSet):
     serializer_class = ActivitySerializer
     queryset = Activity.objects.filter(deleted_at__isnull=True)
 
+    @transaction.atomic
     def create(self, request, *args, **kwargs):
+        subactivities_data = request.data.pop('subactivities', [])
         request.data['user'] = request.user.id
-        return super().create(request, *args, **kwargs)
+
+        activity_serializer = ActivitySerializer(data=request.data)
+        activity_serializer.is_valid(raise_exception=True)
+        activity = activity_serializer.save()
+
+        for i, sub_data in enumerate(subactivities_data):
+            sub_data['activity'] = activity.id
+            sub_serializer = SubActivitySerializer(data=sub_data)
+            if not sub_serializer.is_valid():
+                raise ValidationError({f'subactivities[{i}]': sub_serializer.errors})
+            sub_serializer.save()
+
+        return Response(activity_serializer.data, status=201)
 
 
 @api_view(['GET'])
@@ -28,6 +47,7 @@ def activities_by_user(request):
     return Response(serializer.data)
 
 
+@sub_activities_today_decorator
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def sub_activities_for_today(request):
