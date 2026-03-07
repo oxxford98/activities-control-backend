@@ -9,4 +9,5 @@ router_activities.register(prefix='', basename='activities', viewset=ActivityApi
 
 urlpatterns = [
     path('activities/by-user/', activities_by_user, name='activities_by_user'),
+    path('today/', sub_activities_for_today, name='sub_activities_for_today'),
 ]
