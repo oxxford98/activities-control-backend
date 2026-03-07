@@ -59,7 +59,7 @@ def sub_activities_for_today(request):
 
     subject = request.query_params.get('subject')
     if subject:
-        qs = qs.filter(activity_subject_icontains=subject)
+        qs = qs.filter(activity__subject__icontains=subject)
 
     # clasificar
     expired  = []
