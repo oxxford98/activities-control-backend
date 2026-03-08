@@ -49,7 +49,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'users',
     'activities',
-    'subactivities'
+    'subactivities',
+    'config_daily_work_hours',
 ]
 
 MIDDLEWARE = [

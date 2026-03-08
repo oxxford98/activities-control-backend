@@ -25,6 +25,7 @@ from django.urls import path, include
 from activities.api.router import router_activities
 from users.api.router import router_user
 from subactivities.api.router import router_sub_activities
+from config_daily_work_hours.api.router import router_config_daily_work_hours
 
 
 schema_view = get_schema_view(
@@ -44,10 +45,12 @@ urlpatterns = [
     path('api/', include('users.api.router')),
     path('api/', include('activities.api.router')),
     path('api/', include('subactivities.api.router')),
+    path('api/', include('config_daily_work_hours.api.router')),
     path('admin/', admin.site.urls),
     path('docs/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('redocs/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
     path('api/user/', include(router_user.urls)),
     path('api/activities/', include(router_activities.urls)),
     path('api/sub-activities/', include(router_sub_activities.urls)),
+    path('api/config-daily-work-hours/', include(router_config_daily_work_hours.urls)),
 ]
