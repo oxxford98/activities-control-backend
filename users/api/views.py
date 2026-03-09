@@ -7,7 +7,8 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from users.api.serializers import LoginSerializer, RegisterSerializer
 from datetime import datetime
 from rest_framework.decorators import api_view, permission_classes
-
+from config_daily_work_hours.models import ConfigDailyWorkHours
+from config_daily_work_hours.api.serializer import ConfigDailyWorkHoursSerializer
 
 class UserApiViewSet(ModelViewSet):
     permission_classes = [IsAuthenticated]
@@ -22,12 +23,15 @@ class UserApiViewSet(ModelViewSet):
     def create(self, request, *args, **kwargs):
         serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            user = serializer.save()
+            ConfigDailyWorkHours.objects.create(user=user)
+
             data = {
                 'id': serializer.data['id'],
                 'username': serializer.data['username'],
                 'email': serializer.data['email'],
             }
+
             return Response(data, status=status.HTTP_201_CREATED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

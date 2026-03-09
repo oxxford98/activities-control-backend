@@ -120,6 +120,8 @@ def build(items):
         data = SubActivitySerializer(sub).data
         data['status_expired'] = sub._status
         data['activity_name']  = sub.activity.title
+        data['type_activity']  = sub.activity.type_activity
+        data['subject'] = sub.activity.subject
         result.append(data)
     return result
     
