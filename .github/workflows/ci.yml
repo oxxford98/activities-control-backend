@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.12"]
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: activities_db
+          POSTGRES_USER: activities_user
+          POSTGRES_PASSWORD: activities_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U activities_user -d activities_db"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      SECRET_KEY: ci-secret-key
+      DEBUG: "False"
+      ALLOWED_HOSTS: "*"
+      POSTGRES_DB: activities_db
+      POSTGRES_USER: activities_user
+      POSTGRES_PASSWORD: activities_password
+      POSTGRES_HOST: 127.0.0.1
+      POSTGRES_PORT: 5432
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Apply migrations
+        run: python manage.py migrate --noinput
+
+      - name: Ensure no missing migrations
+        run: python manage.py makemigrations --check --dry-run
+
+      - name: Django deploy checks
+        run: python manage.py check --deploy
+
+      - name: Run tests
+        run: python manage.py test
