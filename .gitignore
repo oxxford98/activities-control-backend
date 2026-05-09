@@ -18,6 +18,7 @@ build/
 
 # Django specific
 *.log
+gunicorn.ctl
 local_settings.py
 /staticfiles/
 
