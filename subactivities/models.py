@@ -9,6 +9,8 @@ class SubActivity(models.Model):
     activity = models.ForeignKey(Activity, on_delete=models.CASCADE, related_name='subactivities')
     target_date = models.DateTimeField()
     estimated_time = models.PositiveIntegerField(validators=[MinValueValidator(1)])
+    status_subactivity = models.IntegerField(default=0)  # 0: Active, #1:postalizes, 2: Completed
+    notes = models.JSONField(blank=True, null=True)  # Store notes as a list of strings
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     deleted_at = models.DateTimeField(null=True, default=None)
