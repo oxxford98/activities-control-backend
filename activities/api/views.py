@@ -1,3 +1,4 @@
+from django.db.models import Count, Q
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.exceptions import ValidationError
 
@@ -37,6 +38,22 @@ class ActivityApiViewSet(ModelViewSet):
 
         return Response(activity_serializer.data, status=201)
 
+    def retrieve(self, request, *args, **kwargs):
+        activity = self.get_object()
+
+        counts = SubActivity.objects.filter(
+            activity=activity,
+            deleted_at__isnull=True
+        ).aggregate(
+            total_subactivities=Count('id'),
+            total_completed=Count('id', filter=Q(status_subactivity=2))
+        )
+
+        data = self.get_serializer(activity).data
+        data.update(counts)
+
+        return Response(data)
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -65,6 +82,13 @@ def sub_activities_for_today(request):
         )
         .select_related('activity')
     )
+
+    status_subactivity = request.query_params.get('status_subactivity')
+    if status_subactivity is not None:
+        try:
+            qs = qs.filter(status_subactivity=int(status_subactivity))
+        except ValueError:
+            return Response({'detail': 'status_subactivity debe ser un entero.'}, status=400)
 
     estimated_time = request.query_params.get('estimated_time')
     if estimated_time is not None:
