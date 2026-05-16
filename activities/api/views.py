@@ -59,10 +59,22 @@ class ActivityApiViewSet(ModelViewSet):
 @permission_classes([IsAuthenticated])
 def activities_by_user(request):
     user = request.user
-    activities = Activity.objects.filter(user=user, deleted_at__isnull=True)
-    serializer = ActivitySerializer(activities, many=True)
-    return Response(serializer.data)
+    activities = Activity.objects.filter(
+        user=user,
+        deleted_at__isnull=True,
+    ).annotate(
+        total_subactivities=Count('subactivities', filter=Q(subactivities__deleted_at__isnull=True)),
+        total_completed=Count('subactivities', filter=Q(subactivities__deleted_at__isnull=True, subactivities__status_subactivity=2)),
+    )
 
+    serializer = ActivitySerializer(activities, many=True)
+    data = serializer.data
+
+    for i, activity in enumerate(activities):
+        data[i]['total_subactivities'] = activity.total_subactivities
+        data[i]['total_completed'] = activity.total_completed
+
+    return Response(data)
 
 @sub_activities_today_decorator
 @api_view(['GET'])
