@@ -77,3 +77,90 @@ class ActivityModuleTests(TestCase):
 		self.assertEqual(response.data[0]['title'], 'Quiz 1')
 		self.assertEqual(response.data[0]['total_subactivities'], 1)
 		self.assertEqual(response.data[0]['total_completed'], 1)
+
+	def test_p3_activity_retrieve_includes_subactivity_counters(self):
+		activity = Activity.objects.create(
+			title='Taller Integrador',
+			type_activity=Activity.TypeActivity.WORKSHOP,
+			subject='Programacion',
+			user=self.user,
+		)
+		SubActivity.objects.create(
+			name='Parte 1',
+			activity=activity,
+			target_date=timezone.now(),
+			estimated_time=1,
+			status_subactivity=0,
+		)
+		SubActivity.objects.create(
+			name='Parte 2',
+			activity=activity,
+			target_date=timezone.now(),
+			estimated_time=1,
+			status_subactivity=2,
+		)
+
+		response = self.client.get(f'/api/activities/{activity.id}/')
+
+		self.assertEqual(response.status_code, 200)
+		self.assertEqual(response.data['total_subactivities'], 2)
+		self.assertEqual(response.data['total_completed'], 1)
+
+	def test_p4_create_activity_with_nested_subactivities(self):
+		payload = self._activity_payload(title='Actividad con sub')
+		payload['subactivities'] = [
+			{
+				'name': 'Sub tarea inicial',
+				'description': 'Detalle',
+				'target_date': (timezone.now() + timedelta(hours=2)).isoformat(),
+				'estimated_time': 2,
+				'status_subactivity': 0,
+			}
+		]
+
+		response = self.client.post('/api/activities/', data=payload, format='json')
+
+		self.assertEqual(response.status_code, 201)
+		created = Activity.objects.get(id=response.data['id'])
+		self.assertEqual(created.user, self.user)
+		self.assertEqual(created.subactivities.count(), 1)
+
+	def test_p5_sub_activities_for_today_classifies_items(self):
+		activity = Activity.objects.create(
+			title='Clasificacion diaria',
+			type_activity=Activity.TypeActivity.OTHER,
+			subject='General',
+			user=self.user,
+		)
+
+		base = timezone.now().replace(hour=12, minute=0, second=0, microsecond=0)
+
+		SubActivity.objects.create(
+			name='Vencida',
+			activity=activity,
+			target_date=base - timedelta(hours=1),
+			estimated_time=1,
+			status_subactivity=0,
+		)
+		SubActivity.objects.create(
+			name='Hoy mas tarde',
+			activity=activity,
+			target_date=base + timedelta(hours=1),
+			estimated_time=2,
+			status_subactivity=0,
+		)
+		SubActivity.objects.create(
+			name='Proxima',
+			activity=activity,
+			target_date=base + timedelta(days=1),
+			estimated_time=1,
+			status_subactivity=0,
+		)
+
+		with patch('activities.api.views.timezone.now', return_value=base):
+			response = self.client.get('/api/today/')
+
+		self.assertEqual(response.status_code, 200)
+		self.assertEqual(len(response.data['expired']), 1)
+		self.assertEqual(len(response.data['today']), 1)
+		self.assertEqual(len(response.data['upcoming']), 1)
