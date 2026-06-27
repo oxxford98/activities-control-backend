@@ -1,5 +1,6 @@
 [run]
-source = activities,subactivities,users,config_daily_work_hours
+relative_files = True
+source = .
 omit =
     */migrations/*
     */tests/*
@@ -7,6 +8,7 @@ omit =
     */settings.py
     */wsgi.py
     */asgi.py
+    static/*
 
 [report]
 show_missing = True
