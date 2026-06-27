@@ -74,7 +74,7 @@ jobs:
 
       - name: SonarCloud Scan
         if: matrix.python-version == '3.12'
-        uses: SonarSource/sonarqube-scan-action@v5
+        uses: SonarSource/sonarqube-scan-action@v6
         with:
           args: >
             -Dsonar.organization=${{ vars.SONAR_ORGANIZATION }}
