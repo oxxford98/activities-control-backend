@@ -1,0 +1,13 @@
+[run]
+source = activities,subactivities,users,config_daily_work_hours
+omit =
+    */migrations/*
+    */tests/*
+    manage.py
+    */settings.py
+    */wsgi.py
+    */asgi.py
+
+[report]
+show_missing = True
+skip_covered = False
