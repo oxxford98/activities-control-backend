@@ -3,6 +3,7 @@ relative_files = True
 source = .
 omit =
     */migrations/*
+    */tests.py
     */tests/*
     manage.py
     */settings.py
