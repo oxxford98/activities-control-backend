@@ -42,6 +42,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -64,5 +66,18 @@ jobs:
       - name: Django deploy checks
         run: python manage.py check --deploy
 
-      - name: Run tests
-        run: python manage.py test
+      - name: Run tests with coverage
+        run: |
+          coverage run --rcfile=.coveragerc manage.py test
+          coverage xml -o coverage.xml
+          coverage report
+
+      - name: SonarCloud Scan
+        if: matrix.python-version == '3.12'
+        uses: SonarSource/sonarqube-scan-action@v5
+        with:
+          args: >
+            -Dsonar.organization=${{ vars.SONAR_ORGANIZATION }}
+            -Dsonar.projectKey=${{ vars.SONAR_PROJECT_KEY }}
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
