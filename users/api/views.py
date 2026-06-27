@@ -5,7 +5,7 @@ from rest_framework import status
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from users.api.serializers import LoginSerializer, RegisterSerializer
-from datetime import datetime
+from django.utils import timezone
 from rest_framework.decorators import api_view, permission_classes
 from config_daily_work_hours.models import ConfigDailyWorkHours
 from config_daily_work_hours.api.serializer import ConfigDailyWorkHoursSerializer
@@ -58,7 +58,7 @@ class UserApiViewSet(ModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         user = self.get_object()
-        user.deleted_at = datetime.now()
+        user.deleted_at = timezone.now()
         user.save()
         serializer = LoginSerializer(user)
         data = {
